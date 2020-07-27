@@ -12,7 +12,6 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
 
-
 parser = argparse.ArgumentParser(description='Train Downscaling Models')
 parser.add_argument('--upscale_factor', default=4, type=int, choices=[4], help='super resolution upscale factor')
 parser.add_argument('--crop_size', default=512, type=int, help='training images crop size')
@@ -26,8 +25,8 @@ parser.add_argument('--adam_beta_1', default=0.5, type=float, help='beta_1 for a
 parser.add_argument('--val_interval', default=1, type=int, help='validation interval')
 parser.add_argument('--val_img_interval', default=30, type=int, help='interval for saving validation images')
 parser.add_argument('--save_model_interval', default=30, type=int, help='interval for saving the model')
-parser.add_argument('--artifacts', default='gaussian', type=str, help='selecting different artifacts type')
-parser.add_argument('--dataset', default='df2k', type=str, help='selecting different datasets')
+parser.add_argument('--artifacts', default='sdsr', type=str, help='selecting different artifacts type')
+parser.add_argument('--dataset', default='aim2019', type=str, help='selecting different datasets')
 parser.add_argument('--flips', dest='flips', action='store_true', help='if activated train images are randomly flipped')
 parser.add_argument('--rotations', dest='rotations', action='store_true',
                     help='if activated train images are rotated by a random angle from {0, 90, 180, 270}')
@@ -62,6 +61,8 @@ if torch.cuda.is_available():
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+torch.autograd.set_detect_anomaly(True)
+
 # prepare data and DataLoaders
 with open('paths.yml', 'r') as stream:
     PATHS = yaml.load(stream)
@@ -95,8 +96,8 @@ if torch.cuda.is_available():
     filter_high_module = filter_high_module.cuda()
 
 # define optimizers
-optimizer_g = optim.Adam(model_g.parameters(), lr=opt.learning_rate, betas=[opt.adam_beta_1, 0.999])
-optimizer_d = optim.Adam(model_d.parameters(), lr=opt.learning_rate, betas=[opt.adam_beta_1, 0.999])
+optimizer_g = optim.Adam(model_g.parameters(), lr=opt.learning_rate, betas=(opt.adam_beta_1, 0.999))
+optimizer_d = optim.Adam(model_d.parameters(), lr=opt.learning_rate, betas=(opt.adam_beta_1, 0.999))
 start_decay = opt.num_epochs - opt.num_decay_epochs
 scheduler_rule = lambda e: 1.0 if e < start_decay else 1.0 - max(0.0, float(e - start_decay) / opt.num_decay_epochs)
 scheduler_g = optim.lr_scheduler.LambdaLR(optimizer_g, lr_lambda=scheduler_rule)
@@ -145,7 +146,8 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
             disc_img = disc_img.cuda()
 
         # Estimate scores of fake and real images
-        fake_img = model_g(input_img)
+        # fake_img = model_g(input_img)
+        fake_img = input_img + model_g(torch.randn(input_img.size()).cuda() * .1)
         if opt.ragan:
             real_tex = model_d(disc_img, fake_img)
             fake_tex = model_d(fake_img, disc_img)
@@ -168,7 +170,7 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
             model_d.zero_grad()
             d_tex_loss = loss.discriminator_loss(real_tex, fake_tex, wasserstein=opt.wgan, grad_penalties=grad_pen)
             d_tex_loss.backward(retain_graph=True)
-            optimizer_d.step()
+            # optimizer_d.step()
             # save data to tensorboard
             if opt.saving:
                 writer.add_scalar('loss/d_tex_loss', d_tex_loss, iteration)
@@ -189,6 +191,9 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
                 writer.add_scalar('loss/color_loss', g_loss_module.last_col_loss, iteration)
                 writer.add_scalar('loss/g_tex_loss', g_loss_module.last_tex_loss, iteration)
                 writer.add_scalar('loss/g_overall_loss', g_loss, iteration)
+
+        if iteration % opt.disc_freq == 0:
+            optimizer_d.step()
 
         # save data to tensorboard
         rgb_loss = g_loss_module.rgb_loss(fake_img, input_img)
@@ -220,7 +225,8 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
                 if torch.cuda.is_available():
                     input_img = input_img.cuda()
                     target_img = target_img.cuda()
-                fake_img = torch.clamp(model_g(input_img), min=0, max=1)
+                # fake_img = torch.clamp(model_g(input_img), min=0, max=1)
+                fake_img = torch.clamp(input_img + model_g(torch.randn(input_img.size()) * .1), min=0, max=1)
 
                 mse = ((fake_img - target_img) ** 2).mean().data
                 mse_sum += mse

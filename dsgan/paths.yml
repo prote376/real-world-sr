@@ -22,12 +22,12 @@ df2k:
       valid: '../datasets/DF2K/clean/valid_LR'
 aim2019:
   sdsr:
-    source: '../datasets/AIM2019/TrainingSource'
-    target: '../datasets/AIM2019/TrainingSource'
+    source: '../../Dataset/AIM2019/TrainingSource'
+    target: '../../Dataset/AIM2019/TrainingSource'
     valid:
   tdsr:
-    source: '../datasets/AIM2019/TrainingSource'
-    target: '../datasets/AIM2019/DIV2K_train_HR'
+    source: '../../Dataset/AIM2019/TrainingSource'
+    target: '../../Dataset/AIM2019/DIV2K_train_HR'
     valid:
 dped:
   clean:

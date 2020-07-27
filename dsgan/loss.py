@@ -5,7 +5,7 @@ from torchvision.models.vgg import vgg16, vgg19
 from model import FilterLow
 import sys
 sys.path.insert(0, './PerceptualSimilarity')
-import PerceptualSimilarity as ps
+import PerceptualSimilarity.models as ps
 
 
 def generator_loss(labels, wasserstein=False, weights=None):
