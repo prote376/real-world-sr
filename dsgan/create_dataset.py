@@ -86,7 +86,7 @@ with torch.no_grad():
         resize1_img = utils.imresize(input_img, 1.0 / opt.upscale_factor, True)
         if torch.cuda.is_available():
             resize1_img = resize1_img.unsqueeze(0).cuda()
-        resize1_noisy_img = model_g(resize1_img).squeeze(0).cpu()
+        resize1_noisy_img = (resize1_img + model_g(torch.randn_like(resize1_img) * .1)).squeeze(0).cpu()
         path = os.path.join(sdsr_lr_dir, os.path.basename(file))
         TF.to_pil_image(resize1_noisy_img).save(path, 'PNG')
 
@@ -105,7 +105,7 @@ with torch.no_grad():
         resize3_cut_img = utils.imresize(resize2_cut_img, 1.0 / opt.upscale_factor, True)
         if torch.cuda.is_available():
             resize3_cut_img = resize3_cut_img.unsqueeze(0).cuda()
-        resize3_cut_noisy_img = model_g(resize3_cut_img).squeeze(0).cpu()
+        resize3_cut_noisy_img = (resize3_cut_img + model_g(torch.randn_like(resize3_cut_img)) * .1).squeeze(0).cpu()
 
         # Save resize3_cut_noisy_img as LR image for TDSR
         path = os.path.join(tdsr_lr_dir, os.path.basename(file))
@@ -127,8 +127,8 @@ with torch.no_grad():
         if torch.cuda.is_available():
             input_img = input_img.unsqueeze(0).cuda()
             resize_img = resize_img.unsqueeze(0).cuda()
-        input_noisy_img = model_g(input_img).squeeze(0).cpu()
-        resize_noisy_img = model_g(resize_img).squeeze(0).cpu()
+        input_noisy_img = (input_img + model_g(torch.randn_like(input_img) * .1)).squeeze(0).cpu()
+        resize_noisy_img = (resize_img + model_g(torch.randn_like(resize_img) * .1)).squeeze(0).cpu()
 
         # Save input_noisy_img as HR image for SDSR
         path = os.path.join(sdsr_hr_dir, os.path.basename(file))
