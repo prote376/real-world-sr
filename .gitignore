@@ -1,2 +1,4 @@
 /dsgan/runs/
 /datasets/
+/dsgan/checkpoints/
+/dsgan/PerceptualSimilarity/

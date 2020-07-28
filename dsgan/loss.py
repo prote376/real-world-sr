@@ -70,6 +70,11 @@ class GeneratorLoss(nn.Module):
         # Color Loss
         self.last_col_loss = self.color_loss(out_images, target_images)
         loss = self.w_col * self.last_col_loss + self.w_tex * self.last_tex_loss
+        loss = 0
+        if self.w_col > 0:
+            loss += self.last_col_loss
+        if self.w_tex > 0:
+            loss += self.last_tex_loss
         if self.use_perceptual_loss:
             loss += self.w_per * self.last_per_loss
         return loss

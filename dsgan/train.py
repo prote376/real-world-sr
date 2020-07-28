@@ -46,7 +46,7 @@ parser.add_argument('--lpips_rot_flip', dest='lpips_rot_flip', action='store_tru
                     help='if activated images are randomly flipped and rotated before being fed to lpips')
 parser.add_argument('--disc_freq', default=1, type=int, help='number of steps until a discriminator updated is made')
 parser.add_argument('--gen_freq', default=1, type=int, help='number of steps until a generator updated is made')
-parser.add_argument('--w_col', default=1, type=float, help='weight of color loss')
+parser.add_argument('--w_col', default=0, type=float, help='weight of color loss')
 parser.add_argument('--w_tex', default=0.005, type=float, help='weight of texture loss')
 parser.add_argument('--w_per', default=0.01, type=float, help='weight of perceptual loss')
 parser.add_argument('--checkpoint', default=None, type=str, help='checkpoint model to start from')
@@ -147,7 +147,7 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
 
         # Estimate scores of fake and real images
         # fake_img = model_g(input_img)
-        fake_img = input_img + model_g(torch.randn(input_img.size()).cuda() * .1)
+        fake_img = input_img + model_g(input_img)
         if opt.ragan:
             real_tex = model_d(disc_img, fake_img)
             fake_tex = model_d(fake_img, disc_img)
@@ -226,7 +226,7 @@ for epoch in range(start_epoch, opt.num_epochs + 1):
                     input_img = input_img.cuda()
                     target_img = target_img.cuda()
                 # fake_img = torch.clamp(model_g(input_img), min=0, max=1)
-                fake_img = torch.clamp(input_img + model_g(torch.randn(input_img.size()) * .1), min=0, max=1)
+                fake_img = torch.clamp(input_img + model_g(input_img), min=0, max=1)
 
                 mse = ((fake_img - target_img) ** 2).mean().data
                 mse_sum += mse
