@@ -10,11 +10,11 @@ from tqdm import tqdm
 
 
 parser = argparse.ArgumentParser(description='Apply the trained model to create a dataset')
-parser.add_argument('--checkpoint', default=None, type=str, help='checkpoint model to use')
+parser.add_argument('--checkpoint', default='./checkpoints/last_iteration.tar', type=str, help='checkpoint model to use')
 parser.add_argument('--artifacts', default='', type=str, help='selecting different artifacts type')
 parser.add_argument('--name', default='', type=str, help='additional string added to folder path')
-parser.add_argument('--dataset', default='df2k', type=str, help='selecting different datasets')
-parser.add_argument('--track', default='train', type=str, help='selecting train or valid track')
+parser.add_argument('--dataset', default='aim2019', type=str, help='selecting different datasets')
+parser.add_argument('--track', default='val', type=str, help='selecting train or valid track')
 parser.add_argument('--num_res_blocks', default=8, type=int, help='number of ResNet blocks')
 parser.add_argument('--cleanup_factor', default=2, type=int, help='downscaling factor for image cleanup')
 parser.add_argument('--upscale_factor', default=4, type=int, choices=[4], help='super resolution upscale factor')
